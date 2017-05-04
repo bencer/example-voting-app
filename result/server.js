@@ -8,6 +8,10 @@ var express = require('express'),
     server = require('http').Server(app),
     io = require('socket.io')(server);
 
+const prom = require('prom-client')
+const prom_gc = require('prometheus-gc-stats')
+prom_gc()
+
 io.set('transports', ['polling']);
 
 var port = process.env.PORT || 4000;
@@ -77,6 +81,10 @@ app.use(express.static(__dirname + '/views'));
 
 app.get('/', function (req, res) {
   res.sendFile(path.resolve(__dirname + '/views/index.html'));
+});
+
+app.get('/metrics', function (req, res) {
+  res.end(prom.register.metrics());
 });
 
 server.listen(port, function () {

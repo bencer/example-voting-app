@@ -10,7 +10,7 @@ import time
 option_a = os.getenv('OPTION_A', "Cats")
 option_b = os.getenv('OPTION_B', "Dogs")
 hostname = socket.gethostname()
-statdsclient = statsd.StatsClient('localhost', 8125, prefix=hostname)
+statsdclient = statsd.StatsClient('localhost', 8125)
 
 app = Flask(__name__)
 
@@ -21,16 +21,21 @@ def get_redis():
 
 @app.route("/", methods=['POST','GET'])
 def hello():
-    start = time.clock()
     voter_id = request.cookies.get('voter_id')
     if not voter_id:
         voter_id = hex(random.getrandbits(64))[2:-1]
 
+    methodtimer = statsdclient.timer('response_time')
+    methodtimer.start()
     vote = None
 
     if request.method == 'POST':
         redis = get_redis()
         vote = request.form['vote']
+        if vote == "a":
+		statsdclient.incr('cats')
+        else:
+		statsdclient.incr('dogs')
         data = json.dumps({'voter_id': voter_id, 'vote': vote})
         redis.rpush('votes', data)
 
@@ -42,10 +47,8 @@ def hello():
         vote=vote,
     ))
     resp.set_cookie('voter_id', voter_id)
-    elapsed = time.clock()
-    elapsed = elapsed - start
-    statdsclient.incr('votes')
-    statdsclient.timing('response_time', elapsed)
+    statsdclient.incr('votes')
+    methodtimer.stop()
     return resp
 
 

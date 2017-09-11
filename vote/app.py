@@ -4,10 +4,13 @@ import os
 import socket
 import random
 import json
+import statsd
+import time
 
 option_a = os.getenv('OPTION_A', "Cats")
 option_b = os.getenv('OPTION_B', "Dogs")
 hostname = socket.gethostname()
+statdsclient = statsd.StatsClient('localhost', 8125, prefix=hostname)
 
 app = Flask(__name__)
 
@@ -18,6 +21,7 @@ def get_redis():
 
 @app.route("/", methods=['POST','GET'])
 def hello():
+    start = time.clock()
     voter_id = request.cookies.get('voter_id')
     if not voter_id:
         voter_id = hex(random.getrandbits(64))[2:-1]
@@ -38,6 +42,10 @@ def hello():
         vote=vote,
     ))
     resp.set_cookie('voter_id', voter_id)
+    elapsed = time.clock()
+    elapsed = elapsed - start
+    statdsclient.incr('votes')
+    statdsclient.timing('response_time', elapsed)
     return resp
 
 

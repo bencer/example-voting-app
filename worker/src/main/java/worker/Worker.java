@@ -4,13 +4,18 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import java.sql.*;
 import org.json.JSONObject;
+import javax.management.*;
+import java.lang.management.*;
 
 class Worker {
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     try {
       Jedis redis = connectToRedis("redis");
       Connection dbConn = connectToDB("db");
-
+      MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+      Metric mBean = new Metric();
+      ObjectName name = new ObjectName("worker:type=Metric");
+      mbs.registerMBean(mBean, name);
       System.err.println("Watching vote queue");
 
       while (true) {
@@ -18,7 +23,13 @@ class Worker {
         JSONObject voteData = new JSONObject(voteJSON);
         String voterID = voteData.getString("voter_id");
         String vote = voteData.getString("vote");
-
+        if (vote.equals("a")) {
+          mBean.incCats();
+        }
+        else {
+          mBean.incDogs();
+        }
+        mBean.incVotes();
         System.err.printf("Processing vote for '%s' by '%s'\n", vote, voterID);
         updateVote(dbConn, voterID, vote);
       }

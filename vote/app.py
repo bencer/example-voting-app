@@ -38,6 +38,8 @@ def hello():
 		statsdclient.incr('cats')
         else:
 		statsdclient.incr('dogs')
+        voter_votes_count += 1
+        statsdclient.gauge('voter_votes_count', voter_votes_count)
         data = json.dumps({'voter_id': voter_id, 'vote': vote})
         redis.rpush('votes', data)
 
@@ -50,8 +52,6 @@ def hello():
     ))
     resp.set_cookie('voter_id', voter_id)
     statsdclient.incr('votes')
-    voter_votes_count += 1
-    statsdclient.gauge('voter_votes_count', voter_votes_count)
     methodtimer.stop()
     return resp
 

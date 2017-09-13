@@ -11,7 +11,7 @@ option_a = os.getenv('OPTION_A', "Cats")
 option_b = os.getenv('OPTION_B', "Dogs")
 hostname = socket.gethostname()
 statsdclient = statsd.StatsClient('localhost', 8125)
-voter_votes_count = 0
+vote_votes_count = 0
 
 app = Flask(__name__)
 
@@ -22,7 +22,7 @@ def get_redis():
 
 @app.route("/", methods=['POST','GET'])
 def hello():
-    global voter_votes_count
+    global vote_votes_count
     voter_id = request.cookies.get('voter_id')
     if not voter_id:
         voter_id = hex(random.getrandbits(64))[2:-1]
@@ -38,8 +38,8 @@ def hello():
 		statsdclient.incr('cats')
         else:
 		statsdclient.incr('dogs')
-        voter_votes_count += 1
-        statsdclient.gauge('voter_votes_count', voter_votes_count)
+        vote_votes_count += 1
+        statsdclient.gauge('vote_votes_count', vote_votes_count)
         data = json.dumps({'voter_id': voter_id, 'vote': vote})
         redis.rpush('votes', data)
 

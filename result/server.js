@@ -11,6 +11,7 @@ var express = require('express'),
 const prom = require('prom-client')
 const prom_gc = require('prometheus-gc-stats')
 prom_gc()
+const result_votes_count = new prom.Counter({name: 'result_votes_count', help: 'Total number of votes processed in the results app' });
 
 io.set('transports', ['polling']);
 
@@ -62,6 +63,7 @@ function collectVotesFromResult(result) {
 
   result.rows.forEach(function (row) {
     votes[row.vote] = parseInt(row.count);
+    result_votes_count.inc(votes[row.vote]);
   });
 
   return votes;

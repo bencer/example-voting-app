@@ -9,8 +9,9 @@ var express = require('express'),
     io = require('socket.io')(server);
 
 const prom = require('prom-client')
+prom.collectDefaultMetrics();
 const prom_gc = require('prometheus-gc-stats')
-prom_gc()
+prom_gc();
 const result_votes_count = new prom.Counter({name: 'result_votes_count', help: 'Total number of votes processed in the results app' });
 
 io.set('transports', ['polling']);
@@ -86,6 +87,7 @@ app.get('/', function (req, res) {
 });
 
 app.get('/metrics', function (req, res) {
+  res.set('Content-Type', prom.register.contentType);
   res.end(prom.register.metrics());
 });
 

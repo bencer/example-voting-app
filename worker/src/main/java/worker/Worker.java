@@ -10,8 +10,8 @@ import java.lang.management.*;
 class Worker {
   public static void main(String[] args) throws Exception {
     try {
-      Jedis redis = connectToRedis("redis");
-      Connection dbConn = connectToDB("db");
+      Jedis redis = connectToRedis();
+      Connection dbConn = connectToDB();
       MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
       Metric mBean = new Metric();
       ObjectName name = new ObjectName("worker:type=Metric");
@@ -56,7 +56,12 @@ class Worker {
     }
   }
 
-  static Jedis connectToRedis(String host) {
+  static Jedis connectToRedis() {
+    String host = System.getenv("REDIS_HOST");
+    if (host == null) {
+      host = "redis";
+    }
+
     Jedis conn = new Jedis(host);
 
     while (true) {
@@ -73,13 +78,15 @@ class Worker {
     return conn;
   }
 
-  static Connection connectToDB(String host) throws SQLException {
+  static Connection connectToDB() throws SQLException {
     Connection conn = null;
 
     try {
-
       Class.forName("org.postgresql.Driver");
-      String url = "jdbc:postgresql://" + host + "/postgres";
+      String url = System.getenv("DB_URL");
+      if (url == null) {
+        url = "jdbc:postgresql://db/postgres";
+      }
 
       while (conn == null) {
         try {

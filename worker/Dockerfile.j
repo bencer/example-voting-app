@@ -16,4 +16,4 @@ RUN ["mvn", "verify"]
 ADD src/main /code/src/main
 RUN ["mvn", "package"]
 
-CMD ["java", "-jar", "target/worker-jar-with-dependencies.jar"]
+CMD ["java", "-Djava.net.preferIPv4Addresses=true", "-jar", "target/worker-jar-with-dependencies.jar"]

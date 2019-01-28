@@ -27,10 +27,12 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
+const db_url = process.env.DB_URL || 'postgres://postgres@db/postgres'
+
 async.retry(
   {times: 1000, interval: 1000},
   function(callback) {
-    pg.connect('postgres://postgres@db/postgres', function(err, client, done) {
+    pg.connect(db_url, function(err, client, done) {
       if (err) {
         console.error("Waiting for db");
       }
